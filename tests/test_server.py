@@ -16,6 +16,7 @@ def test_analyze_synthetic(synthetic_pdf):
     assert r.status_code == 200
     body = r.json()
     assert "M-101" in body["mechanical_pages"] and "total_sale_price" in body
+    assert body.get("sheets") and body["sheets"][0]["type"] in ("vector", "raster", "shx")
 
 
 def test_reprice_excludes_edits_and_margin():

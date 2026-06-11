@@ -67,12 +67,20 @@ function render(d) {
   $("#qhTotal").textContent = fmt(d.total_sale_price);
   $("#qhMeta").textContent = `${d.project_name} · scale ${d.scale?.raw || "1/8\"=1'-0\""} · ${Math.round((d.margin_pct || 0) * 100)}% margin`;
 
-  // sheets
+  // sheets + page-type triage badges
   const imgs = d.annotated_images || [];
-  $("#sheetCount").textContent = `${imgs.length} rendered`;
+  const sheetsBy = {};
+  (d.sheets || []).forEach(s => sheetsBy[s.page] = s);
+  const typeCounts = (d.sheets || []).reduce((m, s) => (m[s.type] = (m[s.type] || 0) + 1, m), {});
+  $("#sheetCount").innerHTML = `${imgs.length} rendered · ` +
+    (Object.keys(typeCounts).map(t => `<span class="ptype ${t}">${t} ${typeCounts[t]}</span>`).join(" ") || "");
   $("#gallery").innerHTML = imgs.map(src => {
-    const p = src.match(/annotated_p(\d+)/);
-    return `<div class="shot" data-src="${src}"><img src="${src}" loading="lazy"><div class="cap">PAGE ${p ? p[1] : ""}</div></div>`;
+    const m = src.match(/annotated_p(\d+)/);
+    const pg = m ? +m[1] : 0;
+    const s = sheetsBy[pg] || {};
+    const badge = s.type ? `<span class="ptype ${s.type}">${s.type}</span>` : "";
+    return `<div class="shot" data-src="${src}"><img src="${src}" loading="lazy">
+      <div class="cap">PAGE ${pg}${s.label ? " · " + s.label : ""} ${badge}</div></div>`;
   }).join("") || `<p class="tag">No annotated sheets produced.</p>`;
   document.querySelectorAll(".shot").forEach(s => s.addEventListener("click", () => openLight(s.dataset.src)));
 

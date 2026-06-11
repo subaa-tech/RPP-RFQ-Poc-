@@ -118,4 +118,5 @@ class Quotation(BaseModel):
     margin_pct: float = 0.0
     total_sale_price: float = 0.0
     low_confidence_items: list[str] = Field(default_factory=list)  # human review queue
+    sheets: list[dict] = Field(default_factory=list)               # per-sheet triage: page/label/type/ducts
     generated_for_review: bool = True

@@ -87,6 +87,7 @@ def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
 
     all_runs = []
     all_fittings = []
+    sheets = []
     for p in mech:
         ducts, fittings, _dims = detect_page_ducts(doc, p.index, p.sheet_label, scale, S,
                                                    client=client, use_llm=use_llm)
@@ -94,6 +95,8 @@ def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
             continue
         annotate_page(doc, p.index, ducts, fittings,
                       os.path.join(out_dir, f"annotated_p{p.index + 1}.png"))
+        sheets.append({"page": p.index + 1, "label": p.sheet_label,
+                       "type": page_type(doc[p.index]), "ducts": len(ducts)})
         all_runs += ducts
         all_fittings += fittings
 
@@ -113,6 +116,7 @@ def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
     low = [r.id for r in all_runs if r.confidence < cutoff]
     q = assemble_quote(project, scale, [p.sheet_label for p in mech], items, fsum, low,
                        margin_pct=cat["margin_pct"])
+    q.sheets = sheets
     write_outputs(q, out_dir)
     with open(os.path.join(out_dir, "review_report.md"), "w", encoding="utf-8") as fh:
         fh.write(build_review_report(all_runs, cutoff))
