@@ -17,6 +17,33 @@ from .review import build_review_report
 from .llm import make_client, NullClient
 
 
+def detect_page_ducts(doc, p_index, sheet_label, scale, S, client=None, use_llm=False):
+    """Detect priced-ready ducts + fittings for one page (single source of truth used
+    by both run_pipeline and the audit tool, so they never drift)."""
+    page = doc[p_index]
+    if _SCALE_RE.search(page.get_text()) is None:
+        return [], [], []      # not a scaled floor plan
+    lines = extract_lines(page)
+    dims = extract_dim_labels(page)
+    W, H = page.rect.width, page.rect.height
+    dims = [d for d in dims if d.center
+            and d.center.x <= S["match"]["drawing_right_frac"] * W
+            and d.center.y <= S["match"]["drawing_bottom_frac"] * H]
+    if not dims:
+        return [], [], []
+    anchors = [d.center for d in dims if d.center]
+    segs = pair_walls(lines, anchors=anchors)
+    runs = build_runs(segs, scale, p_index, sheet_label or f"M-Page{p_index + 1}")
+    runs = match_dims_to_runs(runs, dims, S["match"]["size_radius_pts"])
+    max_len = S.get("max_run_len_ft", 120.0)
+    ducts = [r for r in runs if r.dimension and r.length_ft <= max_len]
+    ducts = fill_missing_dims(doc if use_llm else None, ducts, client=client,
+                              cutoff=S["confidence"]["review_cutoff"])
+    fittings = detect_fittings(ducts)
+    ducts = split_ducts_by_size(ducts, dims, perp_radius=S["match"]["split_perp_radius_pts"])
+    return ducts, fittings, dims
+
+
 def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
     load_env()
     S = load_settings()
@@ -33,32 +60,10 @@ def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
     all_runs = []
     all_fittings = []
     for p in mech:
-        page = doc[p.index]
-        # Take off only from SCALED floor-plan sheets; skip schedule/detail/cover sheets.
-        if _SCALE_RE.search(page.get_text()) is None:
+        ducts, fittings, _dims = detect_page_ducts(doc, p.index, p.sheet_label, scale, S,
+                                                   client=client, use_llm=use_llm)
+        if not ducts:
             continue
-        lines = extract_lines(page)
-        dims = extract_dim_labels(page)
-        # Drawing-area only: drop labels in the title-block / keyed-notes / schedule strip
-        # so legend/schedule text can never anchor a false duct run.
-        W, H = page.rect.width, page.rect.height
-        rfrac = S["match"]["drawing_right_frac"]
-        bfrac = S["match"]["drawing_bottom_frac"]
-        dims = [d for d in dims if d.center and d.center.x <= rfrac * W and d.center.y <= bfrac * H]
-        if not dims:
-            continue  # no duct sizes on this sheet -> nothing to take off
-        anchors = [d.center for d in dims if d.center]
-        segs = pair_walls(lines, anchors=anchors)
-        runs = build_runs(segs, scale, p.index, p.sheet_label or f"M-Page{p.index + 1}")
-        runs = match_dims_to_runs(runs, dims, S["match"]["size_radius_pts"])
-        # real ducts = label-claimed runs within a plausible single-run length (drop table/border lines)
-        max_len = S.get("max_run_len_ft", 120.0)
-        ducts = [r for r in runs if r.dimension and r.length_ft <= max_len]
-        ducts = fill_missing_dims(doc if use_llm else None, ducts, client=client, cutoff=cutoff)
-        # detect fittings on the UN-split geometry (split boundaries are not real junctions)
-        fittings = detect_fittings(ducts)
-        # then split runs that change size along their length, apportioning length per size
-        ducts = split_ducts_by_size(ducts, dims, perp_radius=S["match"]["split_perp_radius_pts"])
         annotate_page(doc, p.index, ducts, fittings,
                       os.path.join(out_dir, f"annotated_p{p.index + 1}.png"))
         all_runs += ducts
