@@ -23,5 +23,33 @@ def build(path: str) -> None:
     doc.close()
 
 
+def build_raster(path: str) -> None:
+    """A flattened RASTER page: two duct walls + a size label, drawn then flattened to a
+    single image (no vector lines or extractable text)."""
+    src = fitz.open()
+    sp = src.new_page(width=400, height=300)
+    sp.draw_line((60, 150), (340, 150), color=(0, 0, 0), width=2)
+    sp.draw_line((60, 166), (340, 166), color=(0, 0, 0), width=2)
+    sp.insert_text((180, 142), '12"x18"', fontsize=11)
+    pix = sp.get_pixmap(dpi=150)
+    out = fitz.open()
+    op = out.new_page(width=400, height=300)
+    op.insert_image(op.rect, pixmap=pix)
+    out.save(path)
+    out.close()
+    src.close()
+
+
+def build_shx(path: str) -> None:
+    """An SHX-like page: lots of vector geometry, no extractable text."""
+    doc = fitz.open()
+    p = doc.new_page(width=400, height=300)
+    for i in range(60):
+        x = 20 + i * 5
+        p.draw_line((x, 40), (x, 260), width=0.5)
+    doc.save(path)
+    doc.close()
+
+
 if __name__ == "__main__":
     build("synthetic.pdf")

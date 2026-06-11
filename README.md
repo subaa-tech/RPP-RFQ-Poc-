@@ -59,9 +59,22 @@ python -m validation.benchmark "<pdf>"    # accuracy vs validation/ground_truth.
 | `validation/` | ground truth + benchmark harness |
 | `docs/` | implementation plan + findings |
 
+## Input types (KT triage)
+
+Each page is auto-classified (`pagetype.py`) and routed:
+
+| Type | Geometry | Dimensions |
+|------|----------|------------|
+| **Vector** (CAD/PDF) | `get_drawings()` — deterministic | text spans — deterministic |
+| **SHX fonts** | `get_drawings()` works (ducts are vectors) | OCR (Tesseract) → Gemini vision → flag |
+| **Raster** (PNG/JPEG) | **OpenCV** Hough line detection | OCR (Tesseract) → Gemini vision → flag |
+
+Text on raster/SHX needs the **Tesseract binary** (offline OCR) or a **`GEMINI_API_KEY`** (vision).
+Without either, those pages are surfaced for human review rather than failing silently.
+
 ## Notes / limits
 
-- Tuned for **true-vector** sheets (this dataset). Raster/SHX inputs are out of scope here.
+- The accuracy certification is on the **vector** sample (this dataset).
 - Duct detection is **label-anchored**: a run becomes a priced line item only when a
   dimension label claims it — this keeps the takeoff precise.
 - Pricing-catalog values are indicative SMACNA defaults in `config/pricing_catalog.yaml`;

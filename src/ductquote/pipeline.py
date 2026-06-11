@@ -6,6 +6,9 @@ from .vision_validate import validate_mechanical
 from .geometry import extract_lines, pair_walls
 from .runs import build_runs
 from .dimensions import extract_dim_labels, match_dims_to_runs
+from .pagetype import page_type
+from .raster import extract_lines_raster
+from .ocr import extract_dim_labels_ocr, extract_dim_labels_vision
 from .vision_dims import fill_missing_dims
 from .fittings import detect_fittings
 from .runsplit import split_ducts_by_size
@@ -32,10 +35,20 @@ def detect_page_ducts(doc, p_index, sheet_label, scale, S, client=None, use_llm=
     """Detect priced-ready ducts + fittings for one page (single source of truth used
     by both run_pipeline and the audit tool, so they never drift)."""
     page = doc[p_index]
-    if _SCALE_RE.search(page.get_text()) is None:
-        return [], [], []      # not a scaled floor plan
-    lines = extract_lines(page)
-    dims = extract_dim_labels(page)
+    ptype = page_type(page)
+    if ptype == "vector":
+        if _SCALE_RE.search(page.get_text()) is None:
+            return [], [], []      # not a scaled floor plan
+        lines = extract_lines(page)
+        dims = extract_dim_labels(page)
+    else:
+        # raster -> CV geometry; SHX -> vector geometry still works. Text via OCR/vision.
+        lines = extract_lines_raster(page) if ptype == "raster" else extract_lines(page)
+        dims = extract_dim_labels(page)
+        if len(dims) < 2:
+            dims = extract_dim_labels_ocr(page)
+            if not dims and use_llm:
+                dims = extract_dim_labels_vision(doc, p_index, client)
     W, H = page.rect.width, page.rect.height
     dims = [d for d in dims if d.center
             and d.center.x <= S["match"]["drawing_right_frac"] * W
