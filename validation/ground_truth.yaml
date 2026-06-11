@@ -1,5 +1,110 @@
 project: GIA Moorefield - PKG 1
-# Filled during Task 15 execution from manual verification + vortex-main oracle.
-mechanical_pages: []        # e.g. ["M-101","M-102",...]
-runs: []                    # verified sample: {sheet, dimension, length_ft_expected, length_tolerance_ft}
-fittings_expected: {}       # counts per sheet
+source: independent extraction of estimator duct-size labels, drawing-area only (title-block/schedule
+  strip excluded), duct floor-plan sheets only
+mechanical_pages:
+- M-0.01
+- M-2.01
+- M-2.02
+- M-2.03
+- M-2.04
+- M-4.01
+- M-4.02
+- M-8.01
+- M-8.02
+- M-9.01
+- M-9.02
+duct_sheets:
+- page: 2
+  sheet: M-2.01
+  title: "10370 Richmond Ave., Ste. 1450 \nTel: (28"
+  distinct_sizes:
+  - 10x10
+  - 14x12
+  - 14x14
+  - 8x8
+  size_counts:
+    14x14: 3
+    14x12: 1
+    10x10: 3
+    8x8: 2
+  total_labels: 9
+- page: 3
+  sheet: M-2.02
+  title: "10370 Richmond Ave., Ste. 1450 \nTel: (28"
+  distinct_sizes:
+  - 10x10
+  - 12x10
+  - 12x16
+  - 14x12
+  - 16x14
+  - 18x14
+  - 20x16
+  - 22x16
+  - 24x14
+  - 42x14
+  - 42x16
+  - 50x16
+  - 8x8
+  size_counts:
+    12x10: 1
+    10x10: 1
+    42x16: 3
+    22x16: 2
+    12x16: 1
+    8x8: 1
+    50x16: 1
+    42x14: 1
+    20x16: 2
+    18x14: 1
+    14x12: 2
+    16x14: 1
+    24x14: 1
+  total_labels: 18
+- page: 4
+  sheet: M-2.03
+  title: "10370 Richmond Ave., Ste. 1450 \nTel: (28"
+  distinct_sizes:
+  - 10x10
+  - 10x12
+  - 12x10
+  - 12x12
+  - 14x12
+  - 14x14
+  - 20x14
+  - 20x16
+  - 32x16
+  - 34x16
+  - 40x16
+  - 42x16
+  - 66x12
+  - 8x8
+  size_counts:
+    10x12: 1
+    10x10: 2
+    14x12: 4
+    12x12: 1
+    40x16: 1
+    20x16: 3
+    32x16: 1
+    42x16: 1
+    34x16: 2
+    14x14: 1
+    12x10: 2
+    20x14: 1
+    8x8: 1
+    66x12: 1
+  total_labels: 22
+- page: 5
+  sheet: M-2.04
+  title: "7\n6\n10370 Richmond Ave., Ste. 1450 \nTel:"
+  distinct_sizes:
+  - 28x16
+  - 30x16
+  - 42x16
+  - 44x16
+  size_counts:
+    44x16: 2
+    28x16: 1
+    42x16: 2
+    30x16: 1
+  total_labels: 6
