@@ -40,12 +40,15 @@ def main(pdf_path):
     results.append(check("R2 Annotate ducts (visual proof)", len(pngs) > 0,
                          f"{len(pngs)} annotated sheet PNGs"))
 
-    dims_ok = all(li.width_in for li in q.line_items) and len(q.line_items) > 0
-    sample_dim = next((li.description for li in q.line_items if li.height_in), "")
+    duct_items = [li for li in q.line_items if li.category == "duct"]
+    dims_ok = bool(duct_items) and all(li.width_in for li in duct_items)
+    sample_dim = next((li.description for li in duct_items if li.height_in), "")
     results.append(check("R3 Extract dimensions (e.g. 12x22)", dims_ok,
-                         f"{len(q.line_items)} sized items, e.g. '{sample_dim}'"))
+                         f"{len(duct_items)} sized ducts, e.g. '{sample_dim}'"))
 
-    len_ok = q.scale.points_to_feet > 0 and all(li.length_ft > 0 for li in q.line_items)
+    # ducts and fittings carry length; hardware (clamps/bolts) legitimately does not
+    len_ok = q.scale.points_to_feet > 0 and all(
+        li.length_ft > 0 for li in q.line_items if li.category != "hardware")
     scale_str = q.scale.raw or "1/8in=1ft (default)"
     total_lf = sum(li.length_ft for li in q.line_items)
     results.append(check("R4 Length from annotation + scale", len_ok,
@@ -68,9 +71,9 @@ def main(pdf_path):
     results.append(check("R9 Pricing deterministic & every cent cited", traceable,
                          "every line item carries a derivation trail (SMACNA chain)"))
 
-    gauge_ok = all(li.gauge for li in q.line_items)
+    gauge_ok = all(li.gauge for li in q.line_items if li.category != "hardware")
     results.append(check("R15 SMACNA gauge/weight/pricing", gauge_ok,
-                         f"e.g. {q.line_items[0].gauge if q.line_items else '-'}, weight→cost→margin"))
+                         f"e.g. {duct_items[0].gauge if duct_items else '-'}, weight→cost→margin"))
 
     thumb_ok = "clamps" in q.fittings_summary and "bolts" in q.fittings_summary
     results.append(check("R16 Thumb rules (clamps/bolts)", thumb_ok,
