@@ -169,6 +169,45 @@ table.boq{width:100%; border-collapse:collapse; font-size:13px}
 .review .chip{border-color:rgba(255,122,122,.3)}
 .review-note{font-size:11px; color:var(--muted); margin:12px 0 0; line-height:1.6}
 
+/* review / approve bar */
+.review-bar{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 16px; margin-bottom:12px; flex-wrap:wrap}
+.rb-group{display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+.rb-label{font-family:var(--mono); font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px}
+.rb-label input{width:58px; background:rgba(8,13,23,.6); border:1px solid var(--line); border-radius:8px; color:var(--ink); padding:6px 8px; font-family:var(--mono); text-align:right}
+.rb-label input:focus{border-color:var(--cyan); outline:none}
+.ghost-btn{background:transparent; border:1px solid var(--line-bright); color:var(--ink); border-radius:9px; padding:8px 14px; cursor:pointer; font-family:var(--mono); font-size:12px; transition:.18s}
+.ghost-btn:hover{border-color:var(--cyan); color:var(--cyan)}
+.ghost-btn.pending{border-color:var(--amber); color:var(--amber); animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 3px rgba(246,180,10,.15)}}
+.rb-stat{font-family:var(--mono); font-size:11.5px; color:var(--faint)}
+.rb-stat .pend{color:var(--amber)}
+.approve-btn{background:linear-gradient(135deg,var(--teal),#34d399); border:none; color:#06231b; font-weight:700; border-radius:10px; padding:10px 18px; cursor:pointer; font-size:13.5px; transition:.2s; box-shadow:0 10px 26px -12px rgba(94,234,212,.6)}
+.approve-btn:hover{transform:translateY(-2px)}
+.approve-btn.done{background:rgba(94,234,212,.18); color:var(--teal); border:1px solid var(--teal); box-shadow:none; cursor:default; transform:none}
+.approved-banner{background:linear-gradient(90deg,rgba(94,234,212,.16),transparent); border:1px solid rgba(94,234,212,.4); color:var(--teal); font-family:var(--mono); font-size:13px; padding:10px 16px; border-radius:12px; margin-bottom:12px; letter-spacing:.04em}
+
+/* editable BoQ */
+.boq.edit td{padding:7px 10px}
+.boq .cell{width:52px; background:rgba(8,13,23,.5); border:1px solid var(--line); border-radius:7px; color:var(--ink); padding:5px 7px; font-family:var(--mono); font-size:12px; text-align:right}
+.boq .cell:focus{border-color:var(--cyan); outline:none; background:rgba(70,200,230,.08)}
+.boq .cell:disabled{opacity:.35; border-color:transparent; background:transparent}
+.boq .inc{width:15px; height:15px; accent-color:var(--teal); cursor:pointer}
+.boq tr.row.excluded{opacity:.4}
+.boq tr.row.excluded td.l, .boq tr.row.excluded td.price{text-decoration:line-through}
+.boq tr.row.edited{box-shadow:inset 3px 0 0 var(--amber)}
+.boq tr.row.edited .price{color:var(--amber)}
+.exp{background:transparent; border:none; color:var(--faint); cursor:pointer; font-size:13px; transition:.15s}
+.exp:hover{color:var(--cyan)}
+.exp.open{transform:rotate(90deg); color:var(--cyan)}
+
+@media print{
+  .topbar,.control,.review-bar,.gallery,.section-head .tag,.exp,#fileInput{display:none !important}
+  body{background:#fff; color:#000}
+  .grid-bg,.scan{display:none}
+  .panel{box-shadow:none; border:1px solid #ccc; background:#fff}
+  .qh-total{ -webkit-text-fill-color:#0b2545; color:#0b2545}
+}
+
 /* lightbox */
 .lightbox{position:fixed; inset:0; background:rgba(4,7,13,.92); z-index:60; display:none; place-items:center; padding:30px; cursor:zoom-out}
 .lightbox.open{display:grid}

@@ -85,6 +85,23 @@ def main():
             page.screenshot(path=str(out_png), full_page=True)
             print(f"[e2e] screenshot -> {out_png}")
             assert "$" in total, "no quote total rendered"
+
+            # --- human-in-the-loop: edit + exclude + recompute + approve ---
+            incs = page.query_selector_all("#boqBody tr.row .inc")
+            lens = page.query_selector_all("#boqBody tr.row .len:not([disabled])")
+            if lens:
+                lens[0].fill("99")                      # edit a duct length
+            if len(incs) > 1:
+                incs[1].uncheck()                       # reject a line item
+            page.fill("#marginInput", "30")             # change margin
+            page.click("#recomputeBtn")
+            page.wait_for_timeout(1200)
+            page.click("#approveBtn")
+            page.wait_for_selector("#approvedBanner:not([hidden])", timeout=15000)
+            approved_total = page.inner_text("#qhTotal")
+            print(f"[e2e] review+approve OK | approved total={approved_total}")
+            page.screenshot(path=str(ROOT / "output" / "ui_approved.png"), full_page=True)
+            assert "$" in approved_total
             browser.close()
         print("[e2e] PASS")
     finally:

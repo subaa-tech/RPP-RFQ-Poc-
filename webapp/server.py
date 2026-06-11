@@ -3,7 +3,9 @@ from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 from src.ductquote.pipeline import run_pipeline
+from src.ductquote.pricing import reprice_items
 
 app = FastAPI(title="RFP/RFQ Vortex Sample POC")
 
@@ -32,6 +34,19 @@ async def analyze(file: UploadFile = File(...), project: str = Form("Project"),
     data["annotated_images"] = imgs
     data["job"] = job
     return JSONResponse(data)
+
+
+class RepriceReq(BaseModel):
+    line_items: list[dict]
+    margin_pct: float = 0.25
+    finalize: bool = False
+
+
+@app.post("/api/reprice")
+def reprice(req: RepriceReq):
+    result = reprice_items(req.line_items, req.margin_pct)
+    result["approved"] = bool(req.finalize)
+    return JSONResponse(result)
 
 
 app.mount("/output", StaticFiles(directory=str(OUT)), name="output")

@@ -100,6 +100,53 @@ def price_fittings(fittings, run_dim_by_id, cat=None):
     return out
 
 
+def reprice_items(items_data, margin_pct, cat=None):
+    """Re-price a reviewer-edited line-item list deterministically (server-authoritative).
+    Honors per-item `included` flags and edited dimensions/length; recomputes the full
+    SMACNA chain for ducts/fittings and margin for hardware. Pricing never trusts the client."""
+    base = cat or load_catalog()
+    cat = dict(base)
+    cat["margin_pct"] = float(margin_pct)
+    out = []
+    for d in items_data:
+        if not d.get("included", True):
+            continue
+        category = d.get("category", "duct")
+        if category == "hardware":
+            cost = round(float(d.get("material_cost") or d.get("total_cost") or 0.0), 2)
+            li = LineItem(
+                item_no=0, description=d.get("description", "Hardware"),
+                page_label=d.get("page_label", "(all)"), category="hardware",
+                quantity=float(d.get("quantity") or 1), material_cost=cost, total_cost=cost,
+                sale_price=round(cost / (1 - cat["margin_pct"]), 2),
+                derivation=[f"hardware ${cost}; sale @ {cat['margin_pct'] * 100:.0f}% margin"],
+            )
+        else:
+            hi = d.get("height_in")
+            hi = float(hi) if hi not in (None, "", 0, "0") else None
+            li = LineItem(
+                item_no=0, description=d.get("description", ""),
+                page_label=d.get("page_label", ""), category=category,
+                shape=Shape(d.get("shape", "rect")),
+                width_in=float(d.get("width_in") or 0), height_in=hi,
+                length_ft=round(float(d.get("length_ft") or 0), 2),
+                quantity=float(d.get("quantity") or 1),
+            )
+            if category == "duct":
+                size = f"{int(li.width_in)}x{int(li.height_in)}" if li.height_in else f'{int(li.width_in)}"Ø'
+                li.description = f"{li.shape.value} duct {size}, {li.length_ft}ft"
+            price_item(li, cat)
+        out.append(li)
+    for n, li in enumerate(out, 1):
+        li.item_no = n
+    return {
+        "included_items": [i.model_dump() for i in out],
+        "subtotal_cost": round(sum(i.total_cost for i in out), 2),
+        "total_sale_price": round(sum(i.sale_price for i in out), 2),
+        "margin_pct": cat["margin_pct"],
+    }
+
+
 def price_hardware(thumb, cat=None):
     """Price thumb-rule hardware (clamps, bolts) per piece."""
     cat = cat or load_catalog()

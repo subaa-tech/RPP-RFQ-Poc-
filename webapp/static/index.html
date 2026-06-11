@@ -85,13 +85,24 @@
       <div class="section-head"><h2>Annotated Sheets</h2><span id="sheetCount" class="tag"></span></div>
       <div class="gallery" id="gallery"></div>
 
-      <!-- BoQ -->
-      <div class="section-head"><h2>Bill of Quantities</h2><span class="tag">click a row for cost derivation</span></div>
+      <!-- BoQ review / approve -->
+      <div class="section-head"><h2>Bill of Quantities</h2><span class="tag">review · edit size/length · include · approve</span></div>
+      <div class="approved-banner" id="approvedBanner" hidden>✓ QUOTATION APPROVED — locked for bid</div>
+      <div class="review-bar panel">
+        <div class="rb-group">
+          <label class="rb-label">Margin
+            <input type="number" id="marginInput" min="0" max="90" step="1" value="25"><span>%</span>
+          </label>
+          <button class="ghost-btn" id="recomputeBtn">↻ Recompute</button>
+          <span class="rb-stat" id="reviewStat"></span>
+        </div>
+        <button class="approve-btn" id="approveBtn">✓ Approve &amp; Finalize</button>
+      </div>
       <div class="panel table-wrap">
-        <table class="boq" id="boq">
+        <table class="boq edit" id="boq">
           <thead><tr>
-            <th>#</th><th class="l">Description</th><th>Sheet</th><th>Len ft</th>
-            <th>SA ft²</th><th>Gauge</th><th>Wt lb</th><th>Cost</th><th>Price</th>
+            <th title="include in bid">✓</th><th>#</th><th class="l">Description</th><th>Sheet</th>
+            <th>W″</th><th>H″</th><th>Len ft</th><th>Gauge</th><th>Price</th><th></th>
           </tr></thead>
           <tbody id="boqBody"></tbody>
         </table>
