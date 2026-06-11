@@ -1,0 +1,18 @@
+scale:
+  default_points_to_feet: 0.1111111   # 1/8"=1'-0" -> 9pt = 1ft
+geometry:
+  max_line_weight_pts: 2.5
+  max_grey_brightness: 0.45
+  min_line_len_pts: 3.0
+  parallel_gap_min_pts: 3.5
+  parallel_gap_max_pts: 50.0
+  parallel_angle_tol_deg: 10.0
+  collinear_join_tol_pts: 2.0
+match:
+  size_radius_pts: 150.0
+fittings:
+  junction_tol_pts: 15.0
+  elbow_90_range: [70, 110]
+  elbow_45_range: [35, 55]
+confidence:
+  review_cutoff: 0.7

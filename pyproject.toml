@@ -1,0 +1,9 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[project]
+name = "rfp-rfq-vortex-sample-poc"
+version = "0.1.0"
+description = "RFP/RFQ Vortex Sample POC - HVAC duct takeoff to quotation"
+requires-python = ">=3.12"

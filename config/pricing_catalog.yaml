@@ -1,0 +1,24 @@
+# Defaults sourced from duct_pricing_reference (SMACNA / ASHRAE / NFPA 90A).
+# All values are configurable; tune to active supplier contracts.
+gauge_by_pressure:           # SMACNA Table 1-1 (longest dim cap inches -> gauge)
+  - {max_dim_in: 30,  gauge: "24 ga", lb_per_sqft: 1.156}
+  - {max_dim_in: 54,  gauge: "24 ga", lb_per_sqft: 1.156}
+  - {max_dim_in: 84,  gauge: "22 ga", lb_per_sqft: 1.406}
+  - {max_dim_in: 999, gauge: "20 ga", lb_per_sqft: 1.656}
+material_cost_per_lb: 0.52         # galvanized mid
+fab_labor_per_sqft: 0.40           # Pitts seam
+overhead_rate: 0.20
+freight_per_lb: 0.08
+waste_up_rule_lbs: 5
+margin_pct: 0.25
+fitting_equiv_length_ft:           # SMACNA equivalent-length (rect)
+  elbow_90: 10
+  elbow_45: 5
+  tee: 12
+  wye: 10
+  reducer: 3
+  transition: 5
+  offset: 8
+thumb_rules:
+  duct_clamp_spacing_ft: 6.56      # ~2m
+  bolts_per_clamp: 4
