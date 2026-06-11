@@ -10,6 +10,12 @@ geometry:
   collinear_join_tol_pts: 2.0
 match:
   size_radius_pts: 150.0
+  # Duct takeoff covers the DRAWING AREA only. Labels in the right title-block /
+  # keyed-notes / schedule strip and the bottom title block are excluded so the
+  # legend/schedule text never anchors a (false) duct run.
+  drawing_right_frac: 0.78
+  drawing_bottom_frac: 0.93
+max_run_len_ft: 120.0   # sanity cap: a single straight run longer than this is a border/table line
 fittings:
   junction_tol_pts: 15.0
   elbow_90_range: [70, 110]

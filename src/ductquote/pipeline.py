@@ -35,14 +35,21 @@ def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
         page = doc[p.index]
         lines = extract_lines(page)
         dims = extract_dim_labels(page)
+        # Drawing-area only: drop labels in the title-block / keyed-notes / schedule strip
+        # so legend/schedule text can never anchor a false duct run.
+        W, H = page.rect.width, page.rect.height
+        rfrac = S["match"]["drawing_right_frac"]
+        bfrac = S["match"]["drawing_bottom_frac"]
+        dims = [d for d in dims if d.center and d.center.x <= rfrac * W and d.center.y <= bfrac * H]
         if not dims:
             continue  # no duct sizes on this sheet -> nothing to take off
         anchors = [d.center for d in dims if d.center]
         segs = pair_walls(lines, anchors=anchors)
         runs = build_runs(segs, scale, p.index, p.sheet_label or f"M-Page{p.index + 1}")
         runs = match_dims_to_runs(runs, dims, S["match"]["size_radius_pts"])
-        # real ducts = the label-claimed runs only
-        ducts = [r for r in runs if r.dimension]
+        # real ducts = label-claimed runs within a plausible single-run length (drop table/border lines)
+        max_len = S.get("max_run_len_ft", 120.0)
+        ducts = [r for r in runs if r.dimension and r.length_ft <= max_len]
         ducts = fill_missing_dims(doc if use_llm else None, ducts, client=client, cutoff=cutoff)
         fittings = detect_fittings(ducts)
         annotate_page(doc, p.index, ducts, fittings,
