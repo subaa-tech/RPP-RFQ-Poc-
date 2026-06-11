@@ -1,17 +1,44 @@
 # Defaults sourced from duct_pricing_reference (SMACNA / ASHRAE / NFPA 90A).
 # All values are configurable; tune to active supplier contracts.
-gauge_by_pressure:           # SMACNA Table 1-1 (longest dim cap inches -> gauge)
-  - {max_dim_in: 30,  gauge: "24 ga", lb_per_sqft: 1.156}
+
+# --- Gauge selection: SMACNA minimum is set by BOTH pressure class AND duct size;
+# the heavier (thicker) of the two governs. ---
+default_pressure_class_wg: 2.0     # project default static pressure (in. w.g.)
+gauge_by_pressure_class:           # pressure (in w.g.) -> baseline gauge
+  - {max_wg: 0.5,  gauge: "26 ga", lb_per_sqft: 0.906}
+  - {max_wg: 1.0,  gauge: "26 ga", lb_per_sqft: 0.906}
+  - {max_wg: 2.0,  gauge: "24 ga", lb_per_sqft: 1.156}
+  - {max_wg: 3.0,  gauge: "22 ga", lb_per_sqft: 1.406}
+  - {max_wg: 4.0,  gauge: "20 ga", lb_per_sqft: 1.656}
+  - {max_wg: 6.0,  gauge: "18 ga", lb_per_sqft: 2.156}
+  - {max_wg: 10.0, gauge: "16 ga", lb_per_sqft: 2.656}
+gauge_by_size:                     # longest dim (in) -> minimum gauge (SMACNA Table 1-1)
+  - {max_dim_in: 30,  gauge: "26 ga", lb_per_sqft: 0.906}
   - {max_dim_in: 54,  gauge: "24 ga", lb_per_sqft: 1.156}
   - {max_dim_in: 84,  gauge: "22 ga", lb_per_sqft: 1.406}
   - {max_dim_in: 999, gauge: "20 ga", lb_per_sqft: 1.656}
+
+# Round/spiral duct is a vendor BUY-OUT priced per linear foot by diameter
+# (rates embed material + spiral-forming labor + supplier margin). Reference Table 3.3 (mid).
+spiral_buyout_per_lf:
+  - {max_dia_in: 4,   usd: 2.50}
+  - {max_dia_in: 6,   usd: 3.20}
+  - {max_dia_in: 8,   usd: 4.00}
+  - {max_dia_in: 10,  usd: 5.20}
+  - {max_dia_in: 12,  usd: 6.50}
+  - {max_dia_in: 16,  usd: 9.80}
+  - {max_dia_in: 20,  usd: 14.00}
+  - {max_dia_in: 999, usd: 19.00}
+
 material_cost_per_lb: 0.52         # galvanized mid
 fab_labor_per_sqft: 0.40           # Pitts seam
 overhead_rate: 0.20
 freight_per_lb: 0.08
 waste_up_rule_lbs: 5
 margin_pct: 0.25
-fitting_equiv_length_ft:           # SMACNA equivalent-length (rect)
+
+# Fittings priced via SMACNA equivalent-length: equiv LF x duct perimeter -> sheet metal.
+fitting_equiv_length_ft:
   elbow_90: 10
   elbow_45: 5
   tee: 12
@@ -19,6 +46,12 @@ fitting_equiv_length_ft:           # SMACNA equivalent-length (rect)
   reducer: 3
   transition: 5
   offset: 8
+
+# Hardware priced per piece (from thumb-rule counts).
+hardware:
+  clamp_usd: 3.50
+  bolt_usd: 0.15
+
 thumb_rules:
   duct_clamp_spacing_ft: 6.56      # ~2m
   bolts_per_clamp: 4

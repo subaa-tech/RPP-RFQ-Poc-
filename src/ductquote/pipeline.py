@@ -1,6 +1,6 @@
 import os
 from .config import load_env, load_settings, load_catalog
-from .loader import open_pdf, parse_scale
+from .loader import open_pdf, parse_scale, _SCALE_RE
 from .classify import classify_pages
 from .vision_validate import validate_mechanical
 from .geometry import extract_lines, pair_walls
@@ -10,7 +10,7 @@ from .vision_dims import fill_missing_dims
 from .fittings import detect_fittings
 from .annotate import annotate_page
 from .boq import build_boq
-from .pricing import price_all
+from .pricing import price_all, price_fittings, price_hardware
 from .quote import assemble_quote, write_outputs
 from .review import build_review_report
 from .llm import make_client, NullClient
@@ -33,6 +33,9 @@ def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
     all_fittings = []
     for p in mech:
         page = doc[p.index]
+        # Take off only from SCALED floor-plan sheets; skip schedule/detail/cover sheets.
+        if _SCALE_RE.search(page.get_text()) is None:
+            continue
         lines = extract_lines(page)
         dims = extract_dim_labels(page)
         # Drawing-area only: drop labels in the title-block / keyed-notes / schedule strip
@@ -57,15 +60,22 @@ def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
         all_runs += ducts
         all_fittings += fittings
 
-    items, thumb = build_boq(all_runs)
-    items = price_all(items)
+    cat = load_catalog()
+    duct_items, thumb = build_boq(all_runs)
+    duct_items = price_all(duct_items)
+    run_dim = {r.id: r.dimension for r in all_runs if r.dimension}
+    fitting_items = price_fittings(all_fittings, run_dim, cat)
+    hardware_items = price_hardware(thumb, cat)
+    items = duct_items + fitting_items + hardware_items
+    for n, li in enumerate(items, 1):
+        li.item_no = n
     fsum = {}
     for f in all_fittings:
         fsum[f.type.value] = fsum.get(f.type.value, 0) + 1
     fsum.update({"clamps": thumb["clamps"], "bolts": thumb["bolts"]})
     low = [r.id for r in all_runs if r.confidence < cutoff]
     q = assemble_quote(project, scale, [p.sheet_label for p in mech], items, fsum, low,
-                       margin_pct=load_catalog()["margin_pct"])
+                       margin_pct=cat["margin_pct"])
     write_outputs(q, out_dir)
     with open(os.path.join(out_dir, "review_report.md"), "w", encoding="utf-8") as fh:
         fh.write(build_review_report(all_runs, cutoff))

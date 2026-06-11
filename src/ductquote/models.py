@@ -90,10 +90,11 @@ class LineItem(BaseModel):
     item_no: int
     description: str               # "Supply duct 12x22, 24 ga galv"
     page_label: str
-    shape: Shape
-    width_in: float
+    category: str = "duct"         # "duct" | "fitting" | "hardware"
+    shape: Shape = Shape.RECT
+    width_in: float = 0.0
     height_in: float | None = None
-    length_ft: float
+    length_ft: float = 0.0
     quantity: float = 1.0
     surface_area_sqft: float = 0.0
     gauge: str = ""                # "24 ga"
