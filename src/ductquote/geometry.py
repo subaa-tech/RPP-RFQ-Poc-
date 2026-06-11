@@ -43,32 +43,66 @@ def _angle(p1, p2):
     return math.degrees(math.atan2(p2.y - p1.y, p2.x - p1.x)) % 180
 
 
-def _perp_gap(a1, a2, b1):
-    dx, dy = a2.x - a1.x, a2.y - a1.y
-    L = math.hypot(dx, dy) or 1e-9
-    return abs((b1.x - a1.x) * dy - (b1.y - a1.y) * dx) / L
+def _dist2(a, b):
+    return (a.x - b.x) ** 2 + (a.y - b.y) ** 2
 
 
-def pair_walls(lines):
-    """Pair parallel walls within gap/angle tolerance into centerline segments."""
+def _gate_by_anchors(lines, anchors, radius):
+    if not anchors:
+        return lines
+    r2 = radius * radius
+    gated = []
+    for (p1, p2, col) in lines:
+        mx, my = (p1.x + p2.x) / 2, (p1.y + p2.y) / 2
+        for an in anchors:
+            if (mx - an.x) ** 2 + (my - an.y) ** 2 <= r2:
+                gated.append((p1, p2, col))
+                break
+    return gated
+
+
+def pair_walls(lines, anchors=None, anchor_radius=600.0):
+    """Pair parallel duct walls into centerline segments. When `anchors`
+    (dimension-label centers) are given, only lines near a label are considered
+    — this is both faster (small n) and more precise (real ducts carry sizes)."""
     S = load_settings()["geometry"]
+    lines = _gate_by_anchors(lines, anchors, anchor_radius)
+
+    # Pre-compute angle, perpendicular offset, and length-projection interval.
+    meta = []
+    for (p1, p2, _c) in lines:
+        ang = _angle(p1, p2)
+        th = math.radians(ang)
+        dx, dy = math.cos(th), math.sin(th)
+        nx, ny = -dy, dx
+        off = p1.x * nx + p1.y * ny
+        t1 = p1.x * dx + p1.y * dy
+        t2 = p2.x * dx + p2.y * dy
+        meta.append((ang, off, min(t1, t2), max(t1, t2)))
+
     segs = []
     used = set()
-    for i in range(len(lines)):
+    n = len(lines)
+    for i in range(n):
         if i in used:
             continue
+        ai, offi, ti0, ti1 = meta[i]
         a1, a2, _ = lines[i]
-        ang_a = _angle(a1, a2)
-        for j in range(i + 1, len(lines)):
+        for j in range(i + 1, n):
             if j in used:
                 continue
-            b1, b2, _ = lines[j]
-            ang_b = _angle(b1, b2)
-            if min(abs(ang_a - ang_b), 180 - abs(ang_a - ang_b)) > S["parallel_angle_tol_deg"]:
+            aj, offj, tj0, tj1 = meta[j]
+            da = abs(ai - aj)
+            if min(da, 180 - da) > S["parallel_angle_tol_deg"]:
                 continue
-            gap = _perp_gap(a1, a2, b1)
+            gap = abs(offi - offj)
             if not (S["parallel_gap_min_pts"] <= gap <= S["parallel_gap_max_pts"]):
                 continue
+            if min(ti1, tj1) - max(ti0, tj0) < 5:   # require length overlap
+                continue
+            b1, b2, _ = lines[j]
+            if _dist2(a1, b1) > _dist2(a1, b2):       # align endpoint order
+                b1, b2 = b2, b1
             c1 = Point(x=(a1.x + b1.x) / 2, y=(a1.y + b1.y) / 2)
             c2 = Point(x=(a2.x + b2.x) / 2, y=(a2.y + b2.y) / 2)
             segs.append(DuctSegment(p1=c1, p2=c2, length_pts=math.hypot(c2.x - c1.x, c2.y - c1.y)))

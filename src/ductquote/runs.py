@@ -29,7 +29,7 @@ def build_runs(segments, scale: Scale, page_index: int, sheet_label: str):
                 used.add(j)
         total_ft = sum(g.length_ft for g in group)
         runs.append(DuctRun(
-            id=f"{sheet_label}-R{len(runs) + 1}", page_index=page_index,
+            id=f"{sheet_label}-P{page_index + 1}-R{len(runs) + 1}", page_index=page_index,
             segments=group, length_ft=round(total_ft, 2),
             reasons=[f"{len(group)} segment(s), {round(total_ft, 2)} ft @ scale {scale.points_to_feet:.4f} ft/pt"],
         ))

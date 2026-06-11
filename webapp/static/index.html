@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RFP/RFQ Vortex — Duct Takeoff Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="scan"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="mark">▚</div>
+    <div>
+      <div class="brand-name">RFP/RFQ <span>VORTEX</span></div>
+      <div class="brand-sub">HVAC Duct Takeoff → Quotation · Sample POC</div>
+    </div>
+  </div>
+  <div class="badge" id="apiBadge">● connecting…</div>
+</header>
+
+<main class="layout">
+  <!-- CONTROL PANEL -->
+  <aside class="panel control" id="controlPanel">
+    <h2 class="panel-title">01 · Source Drawing</h2>
+    <label class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept="application/pdf" hidden>
+      <div class="dz-icon">⤓</div>
+      <div class="dz-main" id="dzMain">Drop the mechanical PDF</div>
+      <div class="dz-sub">or click to browse · vector drawing set</div>
+    </label>
+
+    <h2 class="panel-title">02 · Parameters</h2>
+    <div class="field">
+      <label for="project">Project name</label>
+      <input type="text" id="project" value="GIA Moorefield — PKG 1">
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="useLlm">
+      <span class="track"><span class="thumb"></span></span>
+      <span class="toggle-label">AI assist <em>(Gemini validation &amp; ambiguous reads)</em></span>
+    </label>
+
+    <button class="run-btn" id="runBtn" disabled>
+      <span class="run-label">Generate Quotation</span>
+      <span class="run-arrow">→</span>
+    </button>
+    <p class="hint" id="hint">Deterministic engine runs offline. Lengths &amp; pricing are never AI-estimated.</p>
+  </aside>
+
+  <!-- RESULTS -->
+  <section class="results" id="results">
+    <div class="empty" id="emptyState">
+      <div class="empty-art">▟▙▚▜</div>
+      <h3>Awaiting takeoff</h3>
+      <p>Load a Vortex mechanical drawing set to segregate the M-series sheets,
+         measure duct runs, and assemble a priced quotation — every figure traceable.</p>
+    </div>
+
+    <div class="loading" id="loadingState" hidden>
+      <div class="loader-ring"></div>
+      <div class="loader-steps" id="loaderSteps"></div>
+    </div>
+
+    <div class="report" id="report" hidden>
+      <!-- KPI strip -->
+      <div class="kpis" id="kpis"></div>
+
+      <!-- Quote headline -->
+      <div class="quote-hero panel">
+        <div>
+          <div class="qh-label">Total Quotation</div>
+          <div class="qh-total" id="qhTotal">$0</div>
+          <div class="qh-meta" id="qhMeta"></div>
+        </div>
+        <button class="print-btn" id="printBtn">⎙ Print quote</button>
+      </div>
+
+      <!-- Sheets -->
+      <div class="section-head"><h2>Annotated Sheets</h2><span id="sheetCount" class="tag"></span></div>
+      <div class="gallery" id="gallery"></div>
+
+      <!-- BoQ -->
+      <div class="section-head"><h2>Bill of Quantities</h2><span class="tag">click a row for cost derivation</span></div>
+      <div class="panel table-wrap">
+        <table class="boq" id="boq">
+          <thead><tr>
+            <th>#</th><th class="l">Description</th><th>Sheet</th><th>Len ft</th>
+            <th>SA ft²</th><th>Gauge</th><th>Wt lb</th><th>Cost</th><th>Price</th>
+          </tr></thead>
+          <tbody id="boqBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Fittings + review -->
+      <div class="dual">
+        <div class="panel soft">
+          <h3 class="mini-title">Fittings &amp; Thumb Rules</h3>
+          <div class="chips" id="fittings"></div>
+        </div>
+        <div class="panel soft review" id="reviewPanel" hidden>
+          <h3 class="mini-title">⚠ Human Review Queue</h3>
+          <div class="chips" id="reviewChips"></div>
+          <p class="review-note">Low-confidence items are held for an estimator to approve before the bid ships.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

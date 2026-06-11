@@ -37,20 +37,32 @@ def extract_dim_labels(page):
     return out
 
 
+def _run_center(run):
+    mid = run.segments[len(run.segments) // 2]
+    return Point(x=(mid.p1.x + mid.p2.x) / 2, y=(mid.p1.y + mid.p2.y) / 2)
+
+
 def match_dims_to_runs(runs, dims, radius_pts):
-    for run in runs:
-        mid = run.segments[len(run.segments) // 2]
-        rc = Point(x=(mid.p1.x + mid.p2.x) / 2, y=(mid.p1.y + mid.p2.y) / 2)
-        best, bestd = None, radius_pts
-        for d in dims:
-            if not d.center:
-                continue
+    """Label-driven association: each dimension label is one real duct. Attach
+    each label to its nearest run (closest label wins per run). Runs that no label
+    claims are left undimensioned and are excluded from the takeoff/BoQ."""
+    best_for_run = {}   # run_index -> (distance, dim)
+    for d in dims:
+        if not d.center:
+            continue
+        bi, bd = None, radius_pts
+        for idx, run in enumerate(runs):
+            rc = _run_center(run)
             dist = math.hypot(d.center.x - rc.x, d.center.y - rc.y)
-            if dist < bestd:
-                best, bestd = d, dist
-        if best:
-            run.dimension = best
-            run.reasons.append(f"dim {best.raw_text} matched at {round(bestd)}pt")
+            if dist < bd:
+                bi, bd = idx, dist
+        if bi is not None and (bi not in best_for_run or bd < best_for_run[bi][0]):
+            best_for_run[bi] = (bd, d)
+    for idx, run in enumerate(runs):
+        if idx in best_for_run:
+            dist, d = best_for_run[idx]
+            run.dimension = d
+            run.reasons.append(f"dim {d.raw_text} matched at {round(dist)}pt")
         else:
             run.confidence = min(run.confidence, 0.5)
             run.reasons.append("no dimension label matched within radius")

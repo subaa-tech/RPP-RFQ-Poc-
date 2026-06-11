@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><title>Quotation — {{ q.project_name }}</title>
+<style>body{font:14px system-ui;margin:40px;color:#1a1a1a}h1{margin:0}
+table{border-collapse:collapse;width:100%;margin-top:16px}
+th,td{border:1px solid #ddd;padding:6px 8px;text-align:right}th{background:#0b2545;color:#fff}
+td:nth-child(2){text-align:left}.tot{font-size:20px;font-weight:700;margin-top:16px}
+.warn{color:#b30000}</style>
+<h1>Duct Fabrication Quotation</h1>
+<p><b>{{ q.project_name }}</b> · Scale {{ q.scale.raw or 'default 1/8"=1\'-0"' }} · Sheets: {{ q.mechanical_pages|join(', ') }}</p>
+<table><tr><th>#</th><th>Description</th><th>Len (ft)</th><th>SA (sqft)</th><th>Gauge</th><th>Wt (lb)</th><th>Cost</th><th>Price</th></tr>
+{% for i in q.line_items %}<tr><td>{{i.item_no}}</td><td>{{i.description}}</td><td>{{i.length_ft}}</td><td>{{i.surface_area_sqft}}</td><td>{{i.gauge}}</td><td>{{i.weight_lbs}}</td><td>${{'%.2f'|format(i.total_cost)}}</td><td>${{'%.2f'|format(i.sale_price)}}</td></tr>{% endfor %}
+</table>
+<p>Fittings: {% for k,v in q.fittings_summary.items() %}{{k}}×{{v}} {% endfor %}</p>
+<p class="tot">Total: ${{ '%.2f'|format(q.total_sale_price) }} <small>({{ (q.margin_pct*100)|int }}% margin)</small></p>
+{% if q.low_confidence_items %}<p class="warn">⚠ {{ q.low_confidence_items|length }} item(s) need human review: {{ q.low_confidence_items|join(', ') }}</p>{% endif %}

@@ -1,0 +1,5 @@
+project: GIA Moorefield - PKG 1
+# Filled during Task 15 execution from manual verification + vortex-main oracle.
+mechanical_pages: []        # e.g. ["M-101","M-102",...]
+runs: []                    # verified sample: {sheet, dimension, length_ft_expected, length_tolerance_ft}
+fittings_expected: {}       # counts per sheet

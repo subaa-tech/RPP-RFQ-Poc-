@@ -2,7 +2,7 @@ import re
 import fitz
 from .models import PageInfo
 
-_LABEL_RE = re.compile(r'\b([MASEPC])\s*[-\.]?\s*(\d{1,3}[A-Z]?)\b')
+_LABEL_RE = re.compile(r'\b([MASEPC])\s*[-\.]?\s*(\d{1,3}(?:\.\d{1,3})?[A-Z]?)\b')
 _DIM_RE = re.compile(r'\b\d{1,2}\s*["”]?\s*[x×X]\s*\d{1,2}\b')
 
 
