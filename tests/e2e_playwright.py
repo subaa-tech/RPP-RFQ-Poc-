@@ -8,6 +8,8 @@ Run:
     python tests/e2e_playwright.py             # uses the real sample PDF
     python tests/e2e_playwright.py --synthetic # fast synthetic PDF
 """
+import glob
+import os
 import socket
 import subprocess
 import sys
@@ -17,6 +19,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REAL_PDF = r"C:\Users\subaa\Downloads\2026.01.17Mechanical PKG 1 Core and Shell full.pdf"
 PORT = 8077
+
+
+def find_chrome():
+    """Locate an already-installed Playwright chromium executable (fallback when
+    the exact browser revision for the installed package isn't downloaded)."""
+    if os.environ.get("PW_EXECUTABLE"):
+        return os.environ["PW_EXECUTABLE"]
+    base = os.path.expandvars(r"%USERPROFILE%\AppData\Local\ms-playwright")
+    for pat in ("chromium-*/chrome-win64/chrome.exe", "chromium-*/chrome-win/chrome.exe"):
+        hits = sorted(glob.glob(os.path.join(base, pat)))
+        if hits:
+            return hits[-1]
+    return None
 
 
 def wait_port(port, timeout=40):
@@ -48,7 +63,11 @@ def main():
     try:
         assert wait_port(PORT), "server did not start"
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            exe = find_chrome()
+            launch_kw = {"executable_path": exe} if exe else {}
+            if exe:
+                print(f"[e2e] using browser: {exe}")
+            browser = p.chromium.launch(**launch_kw)
             page = browser.new_page(viewport={"width": 1440, "height": 1900})
             page.goto(f"http://127.0.0.1:{PORT}")
             page.wait_for_selector(".badge.ok", timeout=10000)

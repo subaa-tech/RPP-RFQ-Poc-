@@ -10,6 +10,7 @@
   --serif:'Fraunces',Georgia,serif;
 }
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 html,body{margin:0}
 body{
   font-family:var(--sans); color:var(--ink); background:var(--bg);
