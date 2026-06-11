@@ -17,6 +17,17 @@ from .review import build_review_report
 from .llm import make_client, NullClient
 
 
+def _is_label_fragment(r, max_len_ft=1.5, max_dist_pts=15.0):
+    """A tiny run whose centroid sits ON its own dimension label is a mis-trace of the
+    label area, not a real duct beside the label. (Real short stubs sit offset from the label.)"""
+    if r.length_ft >= max_len_ft or not r.dimension or not r.dimension.center:
+        return False
+    cx = sum((s.p1.x + s.p2.x) / 2 for s in r.segments) / len(r.segments)
+    cy = sum((s.p1.y + s.p2.y) / 2 for s in r.segments) / len(r.segments)
+    dist = ((cx - r.dimension.center.x) ** 2 + (cy - r.dimension.center.y) ** 2) ** 0.5
+    return dist < max_dist_pts
+
+
 def detect_page_ducts(doc, p_index, sheet_label, scale, S, client=None, use_llm=False):
     """Detect priced-ready ducts + fittings for one page (single source of truth used
     by both run_pipeline and the audit tool, so they never drift)."""
@@ -36,11 +47,15 @@ def detect_page_ducts(doc, p_index, sheet_label, scale, S, client=None, use_llm=
     runs = build_runs(segs, scale, p_index, sheet_label or f"M-Page{p_index + 1}")
     runs = match_dims_to_runs(runs, dims, S["match"]["size_radius_pts"])
     max_len = S.get("max_run_len_ft", 120.0)
-    ducts = [r for r in runs if r.dimension and r.length_ft <= max_len]
+    min_len = S.get("min_run_len_ft", 0.5)
+    ducts = [r for r in runs if r.dimension and min_len <= r.length_ft <= max_len]
+    # drop label-fragment mis-traces (tiny run sitting on its own dimension label)
+    ducts = [r for r in ducts if not _is_label_fragment(r)]
     ducts = fill_missing_dims(doc if use_llm else None, ducts, client=client,
                               cutoff=S["confidence"]["review_cutoff"])
     fittings = detect_fittings(ducts)
     ducts = split_ducts_by_size(ducts, dims, perp_radius=S["match"]["split_perp_radius_pts"])
+    ducts = [d for d in ducts if d.length_ft >= min_len]
     return ducts, fittings, dims
 
 

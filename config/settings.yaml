@@ -17,6 +17,7 @@ match:
   drawing_bottom_frac: 0.93
   split_perp_radius_pts: 25.0   # label must sit ON the run (not a neighbor duct) to split it by size
 max_run_len_ft: 120.0   # sanity cap: a single straight run longer than this is a border/table line
+min_run_len_ft: 0.5     # drop sub-0.5ft fragments (label stubs) while keeping real short branch stubs
 fittings:
   junction_tol_pts: 15.0
   elbow_90_range: [70, 110]
