@@ -8,6 +8,7 @@ from .runs import build_runs
 from .dimensions import extract_dim_labels, match_dims_to_runs
 from .vision_dims import fill_missing_dims
 from .fittings import detect_fittings
+from .runsplit import split_ducts_by_size
 from .annotate import annotate_page
 from .boq import build_boq
 from .pricing import price_all, price_fittings, price_hardware
@@ -54,7 +55,10 @@ def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
         max_len = S.get("max_run_len_ft", 120.0)
         ducts = [r for r in runs if r.dimension and r.length_ft <= max_len]
         ducts = fill_missing_dims(doc if use_llm else None, ducts, client=client, cutoff=cutoff)
+        # detect fittings on the UN-split geometry (split boundaries are not real junctions)
         fittings = detect_fittings(ducts)
+        # then split runs that change size along their length, apportioning length per size
+        ducts = split_ducts_by_size(ducts, dims, perp_radius=S["match"]["split_perp_radius_pts"])
         annotate_page(doc, p.index, ducts, fittings,
                       os.path.join(out_dir, f"annotated_p{p.index + 1}.png"))
         all_runs += ducts
