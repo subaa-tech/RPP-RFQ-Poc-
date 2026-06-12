@@ -43,6 +43,7 @@ runBtn.addEventListener("click", async () => {
   fd.append("file", pickedFile);
   fd.append("project", $("#project").value || "Project");
   fd.append("use_llm", $("#useLlm").checked ? "true" : "false");
+  fd.append("scale", $("#scaleSel").value);
   try {
     const r = await fetch("/api/analyze", { method: "POST", body: fd });
     if (!r.ok) throw new Error("HTTP " + r.status);

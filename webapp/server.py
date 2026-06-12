@@ -22,13 +22,14 @@ def health():
 
 @app.post("/api/analyze")
 async def analyze(file: UploadFile = File(...), project: str = Form("Project"),
-                  use_llm: str = Form("false")):
+                  use_llm: str = Form("false"), scale: str = Form("auto")):
     job = uuid.uuid4().hex[:8]
     job_dir = OUT / job
     job_dir.mkdir(parents=True, exist_ok=True)
     pdf_path = job_dir / "input.pdf"
     pdf_path.write_bytes(await file.read())
-    q = run_pipeline(str(pdf_path), project, str(job_dir), use_llm=(use_llm.lower() == "true"))
+    q = run_pipeline(str(pdf_path), project, str(job_dir),
+                     use_llm=(use_llm.lower() == "true"), scale_choice=scale)
     imgs = [f"/output/{job}/{p.name}" for p in sorted(job_dir.glob("annotated_p*.png"))]
     data = q.model_dump()
     data["annotated_images"] = imgs

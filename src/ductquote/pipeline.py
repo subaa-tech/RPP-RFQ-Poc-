@@ -1,6 +1,6 @@
 import os
 from .config import load_env, load_settings, load_catalog
-from .loader import open_pdf, parse_scale, _SCALE_RE
+from .loader import open_pdf, parse_scale, _SCALE_RE, points_to_feet_for
 from .classify import classify_pages
 from .vision_validate import validate_mechanical
 from .geometry import extract_lines, pair_walls
@@ -74,7 +74,7 @@ def detect_page_ducts(doc, p_index, sheet_label, scale, S, client=None, use_llm=
     return ducts, fittings, dims
 
 
-def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
+def run_pipeline(pdf_path, project, out_dir="output", use_llm=True, scale_choice="auto"):
     load_env()
     S = load_settings()
     cutoff = S["confidence"]["review_cutoff"]
@@ -95,6 +95,11 @@ def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
             abs(fpp - scale.points_to_feet) / scale.points_to_feet > 0.25:
         scale = Scale(raw=f"{scale.raw} [scale OVERRIDDEN by {n_cal} square ducts -> {1/fpp:.0f}pt/ft]",
                       points_to_feet=fpp, source="measured")
+
+    # User-selected scale takes precedence over auto-detect (estimator knows the true scale).
+    user_fpp = points_to_feet_for(scale_choice)
+    if user_fpp:
+        scale = Scale(raw=f'{scale_choice}" = 1\'-0" (user-set)', points_to_feet=user_fpp, source="user")
 
     all_runs = []
     all_fittings = []
