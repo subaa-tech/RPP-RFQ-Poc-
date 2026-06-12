@@ -62,6 +62,7 @@ class DuctSegment(BaseModel):
     p2: Point
     length_pts: float
     length_ft: float = 0.0
+    wall_gap_pts: float = 0.0      # perpendicular gap between the two paired walls (for scale self-calibration)
     system: SystemType = SystemType.UNKNOWN
 
 

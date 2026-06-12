@@ -9,6 +9,8 @@ from .dimensions import extract_dim_labels, match_dims_to_runs
 from .pagetype import page_type
 from .raster import extract_lines_raster
 from .ocr import extract_dim_labels_ocr, extract_dim_labels_vision
+from .calibration import derive_points_to_feet
+from .models import Scale
 from .vision_dims import fill_missing_dims
 from .fittings import detect_fittings
 from .runsplit import split_ducts_by_size
@@ -84,6 +86,15 @@ def run_pipeline(pdf_path, project, out_dir="output", use_llm=True):
     scale = parse_scale("\n".join(doc[p.index].get_text() for p in pages if p.is_mechanical) or "")
     pages = validate_mechanical(doc if use_llm else None, pages, client=client)
     mech = [p for p in pages if p.is_mechanical]
+
+    # Self-calibrate scale from square ducts. Only OVERRIDE the text scale when the
+    # measured value disagrees materially (>25%) — i.e. a real scale mismatch
+    # (e.g. enlarged duct plans at 1/4" while the title block prints 1/8").
+    fpp, n_cal, src = derive_points_to_feet(doc, mech, S, scale.points_to_feet)
+    if src == "measured" and scale.points_to_feet > 0 and \
+            abs(fpp - scale.points_to_feet) / scale.points_to_feet > 0.25:
+        scale = Scale(raw=f"{scale.raw} [scale OVERRIDDEN by {n_cal} square ducts -> {1/fpp:.0f}pt/ft]",
+                      points_to_feet=fpp, source="measured")
 
     all_runs = []
     all_fittings = []

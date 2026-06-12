@@ -105,7 +105,8 @@ def pair_walls(lines, anchors=None, anchor_radius=600.0):
                 b1, b2 = b2, b1
             c1 = Point(x=(a1.x + b1.x) / 2, y=(a1.y + b1.y) / 2)
             c2 = Point(x=(a2.x + b2.x) / 2, y=(a2.y + b2.y) / 2)
-            segs.append(DuctSegment(p1=c1, p2=c2, length_pts=math.hypot(c2.x - c1.x, c2.y - c1.y)))
+            segs.append(DuctSegment(p1=c1, p2=c2, length_pts=math.hypot(c2.x - c1.x, c2.y - c1.y),
+                                    wall_gap_pts=gap))
             used.add(i)
             used.add(j)
             break
