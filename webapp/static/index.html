@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -28,12 +29,12 @@
   <!-- CONTROL PANEL -->
   <aside class="panel control" id="controlPanel">
     <h2 class="panel-title">01 · Source Drawing</h2>
-    <label class="dropzone" id="dropzone">
+    <div class="dropzone" id="dropzone">
       <input type="file" id="fileInput" accept="application/pdf" hidden>
       <div class="dz-icon">⤓</div>
       <div class="dz-main" id="dzMain">Drop the mechanical PDF</div>
       <div class="dz-sub">or click to browse · vector drawing set</div>
-    </label>
+    </div>
 
     <h2 class="panel-title">02 · Parameters</h2>
     <div class="field">
